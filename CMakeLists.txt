@@ -17,6 +17,7 @@ SET(HEADER_FILES
   src/generate_svd.h
   src/jacobi.h
   src/dqds.h
+  src/QR_zero_proper.h
 )
 
 add_library(svd ${SOURCE_FILES} ${HEADER_FILES}) 
