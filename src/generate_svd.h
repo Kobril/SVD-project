@@ -93,6 +93,8 @@ class SVDGenerator
         V = MatrixVType::Zero(cols, cols);
         S = MatrixSType::Zero(rows, cols);
 
+        includeBoundaries = includeBoundaries
+        
         RNG = RNG_src;
         distribution = dist_src; 
         SingValVector sigmas1 = SingValVector(p);
