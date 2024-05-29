@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿//Тимошин Эдуард Константинович
+//КМБО-03-22
+
+#pragma once
 #include "generate_svd.h"
 #include <iostream>
 #include <Eigen/dense>

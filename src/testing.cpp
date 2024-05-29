@@ -183,6 +183,69 @@ void svd_test_func(std::string fileName, const std::vector<T>& SigmaMaxMinRatios
     }
 };
 
+void export_data_QR(std::string filename){
+    std::ofstream file(filename);
+    if (file.is_open())
+    {
+        file << std::fixed << std::setprecision(200) << QR_zero_shift.Get_cosines() << "\n\n" << QR_zero_shift.Get_sines() << "\n\n" << QR_zero_shift.Get_size() << "\n\n" << QR_zero_shift.Get_iter_num() << "\n\n" << QR_zero_shift.Get_sigm_B() << "\n\n" << QR_zero_shift.Get_B() << "\n\n" << QR_zero_shift.Get_t();
+    }
+    file.close();
+};
+
+void test_QR_with_zero_shift(std::string filename){
+    
+    //Задача матрицы Гильберта 10 на 10
+    Eigen::Matrix<double, 10,10> matr = Eigen::Matrix<double, 10, 10>();
+    for (int i = 0; i != 10; i++)
+        for (int j = 0; j != 10; j++)
+        {
+            double temp = 1.0 / ((i + 1.0) + (j + 1.0) - 1.0);
+            matr(i, j) = temp;
+        }
+
+    //Генерация рандомной матрицы n на n, 2 переменная - минимальное значение в спектре,  3 переменная - максимальное значение в спектре, 3 - ключ генерации
+    QR_zero_shift<double> QR_zero_shift(3,0.0000001,10000000,122);
+    
+    //Конструктор с заданной матрицей
+    //QR_zero_shift<double> QR_zero_shift(matr);
+
+    //10 итераций алгоритма (Использовать только один раз)  
+    QR_zero_shift.Implicit_QR_with_zero_shift(10, true);
+    
+    //Вывод результатов
+    std::cout << "\nMatrix B: \n" << QR_zero_shift.Get_B();
+    std::cout << "\nLeft rotations res: \n" << QR_zero_shift.Get_left_J();
+    std::cout << "\nRight rotations res: \n" << QR_zero_shift.Get_right_J();
+
+    std::cout << "\nTrue singular values: \n" << QR_zero_shift.Get_true_sigm_B();
+    std::cout << "\nSigm B : \n" << QR_zero_shift.Get_sigm_B();
+    std::cout << "\nMatrix B: \n" << QR_zero_shift.Get_B();
+    std::cout << "\nReconstruct matrix B: \n" << QR_zero_shift.Get_left_J().transpose() * QR_zero_shift.Get_sigm_B() * QR_zero_shift.Get_right_J().transpose();
+    std::cout << "\nReconstruct matrix B with true singular: \n" << QR_zero_shift.Get_left_J().transpose() * QR_zero_shift.Get_true_sigm_B() * QR_zero_shift.Get_right_J().transpose();
+    std::cout << "\nNorm:" << QR_zero_shift.differance_norm() << "\n";
+
+    std::cout << "\nTrue norm: " << QR_zero_shift.Get_B().norm();
+
+    Eigen::Matrix<double, 3, 3> temp_true_sigm = QR_zero_shift.Get_true_sigm_B();
+    auto sigm = QR_zero_shift.Get_sigm_B();
+    
+    export_data_QR(filename) //Экспорт данных для питона 
+
+    //Проверка сдвигов
+    std::cout << "\nOld norm: " << QR_zero_shift.differance_norm() << "\n";
+    for (int i = 0; i != 20; i++) 
+    {
+        Eigen::Vector4d shifts(-5.0 * std::pow(10, -i), -1.0 * std::pow(10, -i), 1.0 * std::pow(10, -i), 5.0 * std::pow(10, -i)); //Задаём сдвиги
+        std::cout << "\nNew norm: " << QR_zero_shift.shifts(shifts, false) << "\n"; //Проверка
+    }
+    auto right = QR_zero_shift.reconstruct_right(); 
+    std::cout << "\nRight_new: \n" << right;
+    std::cout << "\nOrthogonal check: \n" << right.transpose() * right; //Проверка ортогональности
+    auto left = QR_zero_shift.reconstruct_left();
+    std::cout << "\nLeft_new:\n " << left;
+    std::cout << "\nOrthogonal check: \n" << left.transpose() * left; //Проверка ортогональности
+};
+
 int main(){
     auto start = std::chrono::high_resolution_clock::now();
 
